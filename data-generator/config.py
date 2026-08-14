@@ -17,4 +17,4 @@ VOLUMES = {
     "inventory_movements": int(os.getenv("NUM_INVENTORY_MOVEMENTS", 200000)),
 }
 
-CSV_DIR = "data-generator/csv"
+CSV_DIR = "csv"
