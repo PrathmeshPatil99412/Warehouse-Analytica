@@ -1,6 +1,7 @@
 from faker import Faker
 import pandas as pd
 from utils.constants import CUSTOMER_SEGMENTS, SEGMENT_WEIGHTS
+import random
 
 def generate(n: int, fake: Faker) -> pd.DataFrame:
     rows = []
@@ -13,7 +14,6 @@ def generate(n: int, fake: Faker) -> pd.DataFrame:
             "address": fake.street_address(),
             "city": fake.city(),
             "country": fake.country(),
-            "segment": fake.random_elements(elements=CUSTOMER_SEGMENTS, length=1,
-                                              weights=SEGMENT_WEIGHTS)[0],
+            "segment": random.choices(CUSTOMER_SEGMENTS, weights=SEGMENT_WEIGHTS)[0],
         })
     return pd.DataFrame(rows)
