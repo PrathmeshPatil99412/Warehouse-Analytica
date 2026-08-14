@@ -3,13 +3,14 @@ import pandas as pd
 from datetime import timedelta
 from utils.constants import PO_STATUSES, PO_STATUS_WEIGHTS
 from utils.random_dates import random_date, DATA_START, DATA_END
+import random
 
 def generate(n: int, supplier_ids, warehouse_ids, employee_ids, product_ids,
              unit_costs: dict, fake: Faker):
     po_rows, item_rows, item_id = [], [], 1
     for po_id in range(1, n + 1):
         order_date = random_date(DATA_START, DATA_END)
-        status = fake.random_elements(elements=PO_STATUSES, length=1, weights=PO_STATUS_WEIGHTS)[0]
+        status = random.choices(PO_STATUSES, weights=PO_STATUS_WEIGHTS)[0]
         expected = order_date + timedelta(days=fake.random_int(5, 21))
         actual = expected + timedelta(days=fake.random_int(-2, 10)) if status == "received" else None
 
