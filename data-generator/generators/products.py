@@ -13,7 +13,9 @@ def generate_categories(fake: Faker) -> pd.DataFrame:
         for child in children:
             rows.append({"category_id": cat_id, "name": child, "parent_category_id": parent_id_map[parent]})
             cat_id += 1
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    df["parent_category_id"] = df["parent_category_id"].astype("Int64")  # nullable int, avoids 1.0 float bug
+    return df
 
 def generate_products(n: int, category_ids: list, supplier_ids: list, fake: Faker) -> pd.DataFrame:
     rows = []

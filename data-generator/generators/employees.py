@@ -1,3 +1,4 @@
+# data-generator/generators/employees.py
 from faker import Faker
 import pandas as pd
 from utils.constants import JOB_TITLES
@@ -23,4 +24,6 @@ def generate(n: int, warehouse_ids: list, fake: Faker) -> pd.DataFrame:
         })
         if is_manager_slot:
             manager_pool.append(i)
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    df["manager_id"] = df["manager_id"].astype("Int64")  # nullable int, avoids float bug
+    return df
