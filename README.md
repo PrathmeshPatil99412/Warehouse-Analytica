@@ -1,3 +1,5 @@
+![Warehouse Analytica banner](docs/images/banner.png)
+
 # Warehouse Analytica
 
 Enterprise-grade PostgreSQL analytics platform for warehouse and supply-chain
