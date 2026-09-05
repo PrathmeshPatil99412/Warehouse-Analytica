@@ -3,9 +3,9 @@
 Enterprise-grade PostgreSQL analytics platform for warehouse and supply-chain
 intelligence, built with advanced SQL, query optimization, and BI reporting.
 
-> Status: 🚧 In progress — Deliverables 1–8 complete (repo, schema, data pipeline,
-> 50 analytics queries, views/matviews, procedures/triggers, performance engineering).
-> Remaining: Power BI dashboard, FastAPI integration, documentation polish.
+> Status: 🚧 In progress — Deliverables 1–9 complete (repo, schema, data pipeline,
+> 50 analytics queries, views/matviews, procedures/triggers, performance engineering,
+> Power BI dashboard). Remaining: FastAPI integration, documentation polish.
 
 ---
 
@@ -22,9 +22,7 @@ intelligence, built with advanced SQL, query optimization, and BI reporting.
 9. [API](#api)
 10. [Getting Started](#getting-started)
 11. [Repository Structure](#repository-structure)
-12. [Interview Discussion Points](#interview-discussion-points)
-
----
+12. [Interview Discussion Points](#interview-discussion-points
 
 ## Overview
 
@@ -571,7 +569,32 @@ Synthetic data generated with Faker, seeded (`SEED=42`) for reproducibility:
 
 ## Dashboard
 
-<!-- TODO: fill in once finalized -->
+A Power BI dashboard (`dashboard/warehouse_analytica.pbix`) built on top of the
+materialized views and views layer, connected via native SQL queries (Import mode).
+
+### Executive Overview
+Top-level business health at a glance — 30-day revenue, total inventory value,
+products below reorder, average supplier lead time, monthly revenue trend, and
+warehouse utilization.
+
+![Executive Overview](dashboard/screenshots/executive_overview.png)
+
+### Inventory Analytics
+Products needing reorder, total inventory value, and inventory value by warehouse.
+
+![Inventory Analytics](dashboard/screenshots/inventory_analytics.png)
+
+### Sales Analytics
+Monthly revenue trend, top 20 customers by lifetime value, and order status
+breakdown.
+
+![Sales Analytics](dashboard/screenshots/sales_analytics.png)
+
+### Warehouse Analytics
+Warehouse utilization, transfer volume between warehouse pairs, and total
+orders processed per warehouse.
+
+![Warehouse Analytics](dashboard/screenshots/warehouse_analytics.png)
 
 ## API
 
