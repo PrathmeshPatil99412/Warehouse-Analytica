@@ -5,10 +5,6 @@
 Enterprise-grade PostgreSQL analytics platform for warehouse and supply-chain
 intelligence, built with advanced SQL, query optimization, and BI reporting.
 
-> Status: 🚧 In progress — Deliverables 1–9 complete (repo, schema, data pipeline,
-> 50 analytics queries, views/matviews, procedures/triggers, performance engineering,
-> Power BI dashboard). Remaining: FastAPI integration, documentation polish.
-
 ---
 
 ## Table of Contents
@@ -24,7 +20,6 @@ intelligence, built with advanced SQL, query optimization, and BI reporting.
 9. [API](#api)
 10. [Getting Started](#getting-started)
 11. [Repository Structure](#repository-structure)
-12. [Interview Discussion Points](#interview-discussion-points
 
 ## Overview
 
