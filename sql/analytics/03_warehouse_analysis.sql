@@ -1,32 +1,175 @@
--- 17. Warehouse utilization % (units on hand vs capacity)
+-- ============================================================
+-- 17. Warehouse Utilization % — Units on Hand vs Capacity
+-- ============================================================
+--
+-- Measures how much of each warehouse's total unit capacity is
+-- currently occupied by inventory.
+--
+-- Utilization formula:
+--     units_stored / warehouse_capacity × 100
+--
+-- w = warehouses
+-- i = inventory
+--
+-- quantity_on_hand represents physical units currently stored,
+-- while capacity_units represents the warehouse's configured
+-- storage capacity.
+--
+-- Result grain: one row per warehouse.
+--
+-- BUSINESS NOTE:
+-- This measures utilization by unit count, not physical volume,
+-- weight, or storage space. It assumes capacity_units and
+-- quantity_on_hand are comparable units for this analytical model.
+-- ============================================================
+
 SELECT w.name, w.capacity_units, SUM(i.quantity_on_hand) AS units_stored,
+
        ROUND(100.0 * SUM(i.quantity_on_hand) / w.capacity_units, 1) AS utilization_pct
+
 FROM warehouses w JOIN inventory i ON i.warehouse_id = w.warehouse_id
+
 GROUP BY w.warehouse_id, w.name, w.capacity_units ORDER BY utilization_pct DESC;
 
--- 18. Transfer volume between warehouse pairs
-SELECT wf.name AS from_warehouse, wt.name AS to_warehouse, COUNT(*) AS transfer_count, SUM(st.quantity) AS units_transferred
+
+-- ============================================================
+-- 18. Transfer Volume Between Warehouse Pairs
+-- ============================================================
+--
+-- Measures completed stock transfers between warehouse pairs.
+--
+-- st = stock_transfers
+-- wf = source ("from") warehouse
+-- wt = destination ("to") warehouse
+--
+-- The same warehouses table is joined twice because each transfer
+-- contains two distinct roles for a warehouse:
+--     from_warehouse_id -> source
+--     to_warehouse_id   -> destination
+--
+-- Only completed transfers are included so pending, in-transit,
+-- and cancelled transfers do not contribute to completed movement.
+--
+-- Result grain: one row per source/destination warehouse pair.
+-- ============================================================
+
+SELECT wf.name AS from_warehouse,
+       wt.name AS to_warehouse,
+       COUNT(*) AS transfer_count,
+       SUM(st.quantity) AS units_transferred
+
 FROM stock_transfers st
+
 JOIN warehouses wf ON wf.warehouse_id = st.from_warehouse_id
+
 JOIN warehouses wt ON wt.warehouse_id = st.to_warehouse_id
+
 WHERE st.status = 'completed'
+
 GROUP BY wf.name, wt.name ORDER BY units_transferred DESC;
 
--- 19. Employee productivity — orders processed per employee (sales side)
-SELECT e.first_name || ' ' || e.last_name AS employee, w.name AS warehouse, COUNT(*) AS orders_handled
-FROM sales_orders so
-JOIN employees e ON e.employee_id = so.employee_id
-JOIN warehouses w ON w.warehouse_id = so.warehouse_id
-WHERE so.status != 'cancelled'
-GROUP BY employee, w.name ORDER BY orders_handled DESC LIMIT 20;
 
--- 20. Warehouse revenue contribution %
-SELECT w.name,
-       SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0)) AS revenue,
-       ROUND(100.0 * SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0))
-             / SUM(SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0))) OVER (), 2) AS pct_of_total
+-- ============================================================
+-- 19. Employee Productivity — Orders Processed per Employee
+-- ============================================================
+--
+-- Measures the number of non-cancelled sales orders handled by
+-- each employee on the sales side.
+--
+-- so = sales_orders
+-- e  = employees
+-- w  = warehouses
+--
+-- employee_id in sales_orders identifies the employee responsible
+-- for handling the sales order.
+--
+-- The warehouse is included to provide operational context for
+-- the employee's activity.
+--
+-- e.first_name || ' ' || e.last_name:
+-- PostgreSQL string concatenation used to create a display name.
+--
+-- Result grain: one row per employee/warehouse combination.
+--
+-- BUSINESS NOTE:
+-- This is a volume-based productivity metric. It measures orders
+-- handled, not revenue generated, order complexity, processing
+-- time, or employee efficiency per unit of work.
+-- ============================================================
+
+SELECT e.first_name || ' ' || e.last_name AS employee,
+       w.name AS warehouse,
+       COUNT(*) AS orders_handled
+
 FROM sales_orders so
-JOIN sales_order_items soi ON soi.so_id = so.so_id
+
+JOIN employees e ON e.employee_id = so.employee_id
+
 JOIN warehouses w ON w.warehouse_id = so.warehouse_id
+
 WHERE so.status != 'cancelled'
-GROUP BY w.name ORDER BY revenue DESC;
+
+GROUP BY employee, w.name
+ORDER BY orders_handled DESC
+LIMIT 20;
+
+
+-- ============================================================
+-- 20. Warehouse Revenue Contribution %
+-- ============================================================
+--
+-- Calculates both the revenue generated by each warehouse and
+-- that warehouse's percentage contribution to total revenue.
+--
+-- so  = sales_orders
+-- soi = sales_order_items
+-- w   = warehouses
+--
+-- Revenue is first aggregated at warehouse level.
+--
+-- The nested window aggregation:
+--
+--     SUM(SUM(revenue_expression)) OVER ()
+--
+-- works by first calculating each warehouse's SUM(), then using
+-- a window SUM across those warehouse-level totals to obtain
+-- the overall revenue denominator.
+--
+-- Therefore:
+--
+--     warehouse revenue
+--     ----------------- × 100
+--       total revenue
+--
+-- PARTITION BY is intentionally omitted from the outer window
+-- SUM because the denominator must be the global total across
+-- all warehouses.
+--
+-- Cancelled orders are excluded from both the numerator and
+-- denominator, keeping the contribution percentages consistent.
+--
+-- Result grain: one row per warehouse.
+-- ============================================================
+
+SELECT w.name,
+
+       SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0)) AS revenue,
+
+       ROUND(
+           100.0 * SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0))
+                / SUM(
+                    SUM(soi.quantity * soi.unit_price * (1 - soi.discount_pct/100.0))
+                  ) OVER (),
+           2
+       ) AS pct_of_total
+
+FROM sales_orders so
+
+JOIN sales_order_items soi ON soi.so_id = so.so_id
+
+JOIN warehouses w ON w.warehouse_id = so.warehouse_id
+
+WHERE so.status != 'cancelled'
+
+GROUP BY w.name
+ORDER BY revenue DESC;
