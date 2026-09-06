@@ -1,7 +1,11 @@
 import psycopg
 from psycopg.rows import dict_row
 from contextlib import contextmanager
-from config import DATABASE_URL
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 @contextmanager
 def get_connection():
